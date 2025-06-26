@@ -11,7 +11,7 @@ pub fn build(b: *std.Build) void {
 
     const compile_cuda = b.addRunArtifact(nvrtc);
     compile_cuda.addArg("src/cuda/wmma.cu");
-    compile_cuda.addArg("src/cuda/wmma");
+    compile_cuda.addArg("zig-out/lib/wmma");
     b.getInstallStep().dependOn(&compile_cuda.step);
 
     const wmma = b.createModule(.{ .root_source_file = b.path("src/cuda/wmma.zig") });
@@ -42,5 +42,6 @@ pub fn build(b: *std.Build) void {
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
     const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(b.getInstallStep());
     test_step.dependOn(&run_lib_unit_tests.step);
 }

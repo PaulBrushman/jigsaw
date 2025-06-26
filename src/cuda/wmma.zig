@@ -11,18 +11,18 @@ pub fn wmmBlock(a: []f16, b: []f16, c: []f16, stride: usize, allocator: std.mem.
 
     const cu_slice_a = try device.htodCopy(f16, a);
     const cu_slice_b = try device.htodCopy(f16, b);
-    const dest_cu_slice = try device.htodCopy(f16, c); //try device.alloc(f16, 256);
+    const dest_cu_slice = try device.htodCopy(f16, c);
     defer cu_slice_a.free();
     defer cu_slice_b.free();
     defer dest_cu_slice.free();
 
-    const ptx = try read_source("src/cuda/wmma", allocator);
+    const ptx = try read_source("zig-out/lib/wmma", allocator);
     defer allocator.free(ptx);
 
     const module = try CuDevice.loadPtxText(ptx);
     const function = try module.getFunc("test_wmma");
 
-    try function.run(.{ &cu_slice_a.device_ptr, &cu_slice_b.device_ptr, &dest_cu_slice.device_ptr, stride }, CuLaunchConfig{ .block_dim = .{ 1024, 1, 1 }, .grid_dim = .{ 1, 1, 1 }, .shared_mem_bytes = 0 });
+    try function.run(.{ &cu_slice_a.device_ptr, &cu_slice_b.device_ptr, &dest_cu_slice.device_ptr, &stride }, CuLaunchConfig{ .block_dim = .{ 1024, 1, 1 }, .grid_dim = .{ 1, 1, 1 }, .shared_mem_bytes = 0 });
     const result = try CuDevice.syncReclaim(f16, allocator, dest_cu_slice);
 
     return result;
