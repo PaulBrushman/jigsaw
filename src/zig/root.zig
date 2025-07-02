@@ -1,17 +1,20 @@
 const std = @import("std");
-const cuda = @import("wmma");
+const Kernel = @import("wmma").Kernel;
 const testing = std.testing;
 const assert = std.debug.assert;
 const print = std.debug.print;
 
-pub fn wmmBlock(a: []f16, b: []f16, c: []f16, stride: usize, allocator: std.mem.Allocator) ![]f16 {
-    return (try cuda.wmmBlock(a, b, c, stride, allocator)).items;
-}
-
+// pub fn wmmBlock(a: []f16, b: []f16, c: []f16, stride: usize, allocator: std.mem.Allocator) ![]f16 {
+//     return (try Kernel.wmmBlock(a, b, c, stride, allocator)).items;
+// }
+//
 pub fn MMA(a: []f16, b: []f16, side_size: u32, alloc: std.mem.Allocator) ![]f16 {
     assert(side_size % 16 == 0);
     assert(a.len == side_size * side_size);
     assert(b.len == side_size * side_size);
+
+    const kernel = try Kernel.init(alloc);
+    defer kernel.deinit(alloc);
 
     var c = try alloc.alloc(f16, side_size * side_size);
     for (0..c.len) |i|
@@ -25,7 +28,7 @@ pub fn MMA(a: []f16, b: []f16, side_size: u32, alloc: std.mem.Allocator) ![]f16 
             const a_offset = a_line * 16 + i * side_size * 16;
             const b_offset = b_line * 16 + i * side_size * 16;
             const c_offset = a_line * 16 + b_line * side_size * 16;
-            const c_new = try wmmBlock(a[a_offset..], b[b_offset..], c[c_offset..], side_size, alloc);
+            const c_new = (try kernel.run(a[a_offset..], b[b_offset..], c[c_offset..], side_size, alloc)).items;
             defer alloc.free(c_new);
             for (0..16) |x| {
                 for (0..16) |y|
