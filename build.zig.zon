@@ -66,9 +66,9 @@
         //    .lazy = false,
         //},
         .cudaz = .{
-            .path = "../../clones/cudaz/",
-            // .url = "https://github.com/akhildevelops/cudaz/tarball/main",
-            // .hash = "12207f7b8a1c75d3b1c1c9f612e77d174ed89821166f95e47f826e8e18838e549445", // "12205f26ee39f0f0e5c7537a4d6a797de089bfbc2dd5f59ee36a61f9cb67a4157934",
+            // .path = "../../clones/cudaz/",
+            .url = "https://github.com/PaulBrushman/cudaz/tarball/main",
+            .hash = "1220af7864f99266ceceb7993f670d2f072e08ab7d47fea67f1acd0271bea644173a",
         },
     },
 

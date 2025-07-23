@@ -3,7 +3,6 @@
   config.cudaSupport = true;
   config.cudaVersion = 12;
   } }:
-# pkgs.pkgsi686Linux.mkShell {
 pkgs.mkShell {
   name = "cuda-env-shell";
   buildInputs = with pkgs; [

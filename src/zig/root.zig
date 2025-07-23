@@ -4,10 +4,6 @@ const testing = std.testing;
 const assert = std.debug.assert;
 const print = std.debug.print;
 
-// pub fn wmmBlock(a: []f16, b: []f16, c: []f16, stride: usize, allocator: std.mem.Allocator) ![]f16 {
-//     return (try Kernel.wmmBlock(a, b, c, stride, allocator)).items;
-// }
-//
 pub fn MMA(a: []f16, b: []f16, side_size: u32, alloc: std.mem.Allocator) ![]f16 {
     assert(side_size % 16 == 0);
     assert(a.len == side_size * side_size);

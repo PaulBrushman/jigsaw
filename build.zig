@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const nvrtc = b.addExecutable(.{ .name = "cuda_compile", .root_source_file = b.path("tools/cuda_compile.zig"), .target = b.graph.host });
-    const cudaz_dep = b.dependency("cudaz", .{ .CUDA_PATH = @as([]const u8, "/nix/store/s2w5yf13gbylj2xnhnp285jlcahxdpfl-cuda-merged-12.8/") });
+    const cudaz_dep = b.dependency("cudaz", .{ .CUDA_PATH = @as([]const u8, std.posix.getenv("CUDA_PATH").?) });
     const cudaz_module = cudaz_dep.module("cudaz");
     nvrtc.root_module.addImport("cudaz", cudaz_module);
     nvrtc.linkLibC();
