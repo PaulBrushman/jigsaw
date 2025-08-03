@@ -2,6 +2,7 @@ const std = @import("std");
 const Kernel = @import("wmma").Kernel;
 const testing = std.testing;
 const assert = std.debug.assert;
+const expect = std.testing.expect;
 const print = std.debug.print;
 
 pub fn MMA(a: []f16, b: []f16, side_size: u32, alloc: std.mem.Allocator) ![]f16 {
@@ -40,7 +41,7 @@ test "single block ones multiply" {
     var mat = [_]f16{1} ** 256;
     const e = try MMA(&mat, &mat, 16, alloc);
     defer alloc.free(e);
-    for (e) |r| assert(r == 16.0);
+    for (e) |r| expect(r == 16.0);
 }
 
 test "4 block ones multiply" {
@@ -48,7 +49,7 @@ test "4 block ones multiply" {
     var mat = [_]f16{1} ** (256 * 4);
     const e = try MMA(&mat, &mat, 32, alloc);
     defer alloc.free(e);
-    for (e) |r| assert(r == 32.0);
+    for (e) |r| expect(r == 32.0);
 }
 
 test "9 block ones multiply" {
@@ -56,7 +57,7 @@ test "9 block ones multiply" {
     var mat = [_]f16{1} ** (256 * 9);
     const e = try MMA(&mat, &mat, 48, alloc);
     defer alloc.free(e);
-    for (e) |r| assert(r == 48.0);
+    for (e) |r| expect(r == 48.0);
 }
 
 test "actual multiplication" {
@@ -73,10 +74,10 @@ test "actual multiplication" {
     b[136] = 8;
     const e = try MMA(&a, &b, 16, alloc);
     defer alloc.free(e);
-    assert(e[0] == 26);
-    assert(e[8] == 38);
-    assert(e[128] == 30);
-    assert(e[136] == 44);
+    expect(e[0] == 26);
+    expect(e[8] == 38);
+    expect(e[128] == 30);
+    expect(e[136] == 44);
 }
 
 test "actual multiplication 2" {
@@ -93,8 +94,8 @@ test "actual multiplication 2" {
     b[528] = 8;
     const e = try MMA(&a, &b, 32, alloc);
     defer alloc.free(e);
-    assert(e[0] == 26);
-    assert(e[16] == 38);
-    assert(e[512] == 30);
-    assert(e[528] == 44);
+    expect(e[0] == 26);
+    expect(e[16] == 38);
+    expect(e[512] == 30);
+    expect(e[528] == 44);
 }
