@@ -1,6 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
 const Cuda = @import("cudaz");
+const Precision = @import("../zig/matrix_layout.zig").Precision;
 const CuDevice = Cuda.Device;
 const CuCompile = Cuda.Compile;
 const CuLaunchConfig = Cuda.LaunchConfig;
@@ -24,7 +25,7 @@ pub const Kernel = struct {
         return .{ .func = function, .module = module, .ptx = ptx, .device = device };
     }
 
-    pub fn run(self: Kernel, a: []f16, b: []f16, c: []f16, stride: usize, allocator: std.mem.Allocator) !std.ArrayList(f16) {
+    pub fn run(self: Kernel, a: []f16, b: []f16, c: []f16, precision: Precision, stride: usize, allocator: std.mem.Allocator) !std.ArrayList(f16) {
         const cu_slice_a = try self.device.htodCopy(f16, a);
         const cu_slice_b = try self.device.htodCopy(f16, b);
         const dest_cu_slice = try self.device.htodCopy(f16, c);

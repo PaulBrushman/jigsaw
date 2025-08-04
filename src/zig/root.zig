@@ -1,11 +1,12 @@
 const std = @import("std");
 const Kernel = @import("wmma").Kernel;
+const MatrixLayout = @import("matrix_layout.zig").MatrixLayout;
 const testing = std.testing;
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 const print = std.debug.print;
 
-pub fn MMA(a: []f16, b: []f16, side_size: u32, alloc: std.mem.Allocator) ![]f16 {
+pub fn MMA(a: []f16, b: []f16, a_layout: MatrixLayout, b_layout: MatrixLayout, side_size: u32, alloc: std.mem.Allocator) ![]f16 {
     assert(side_size % 16 == 0);
     assert(a.len == side_size * side_size);
     assert(b.len == side_size * side_size);
@@ -25,7 +26,8 @@ pub fn MMA(a: []f16, b: []f16, side_size: u32, alloc: std.mem.Allocator) ![]f16 
             const a_offset = a_line * 16 + i * side_size * 16;
             const b_offset = b_line * 16 + i * side_size * 16;
             const c_offset = a_line * 16 + b_line * side_size * 16;
-            const c_new = (try kernel.run(a[a_offset..], b[b_offset..], c[c_offset..], side_size, alloc)).items;
+            const precision = a_layout.get_precision(i, a_line).max(b_layout.get_precision(i, b_line));
+            const c_new = (try kernel.run(a[a_offset..], b[b_offset..], c[c_offset..], precision, side_size, alloc)).items;
             defer alloc.free(c_new);
             for (0..16) |x| {
                 for (0..16) |y|
