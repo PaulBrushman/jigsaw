@@ -1,4 +1,5 @@
 #include <mma.h>
+#include <cuda_fp16.h>
 
 using namespace nvcuda;
 extern "C" __global__ void wmma_half(half *a, half *b, half *c, const size_t stride) {
@@ -14,11 +15,15 @@ extern "C" __global__ void wmma_half(half *a, half *b, half *c, const size_t str
 
    wmma::store_matrix_sync(c, dest_frag, stride, wmma::mem_col_major);
 }
+
+__device__ void dummy_quant(half *a, unsigned char *b){
+  //__half2uchar_rz
+}
  
-extern "C" __global__ void wmma_byte(byte *a, byte *b, byte *c, const size_t stride) {
-   wmma::fragment<wmma::matrix_a, 32, 16, 16, byte, wmma::col_major> a_frag;
-   wmma::fragment<wmma::matrix_b, 16, 32, 16, byte, wmma::row_major> b_frag;
-   wmma::fragment<wmma::accumulator, 32, 16, 16, byte> dest_frag;
+extern "C" __global__ void wmma_byte(half *a, half *b, half *c, const size_t stride) {
+   wmma::fragment<wmma::matrix_a, 16, 16, 16, byte, wmma::col_major> a_frag;
+   wmma::fragment<wmma::matrix_b, 16, 16, 16, byte, wmma::row_major> b_frag;
+   wmma::fragment<wmma::accumulator, 16, 16, 16, byte> dest_frag;
 
    wmma::fill_fragment(dest_frag, 0.0f);
    wmma::load_matrix_sync(a_frag, a, stride);
