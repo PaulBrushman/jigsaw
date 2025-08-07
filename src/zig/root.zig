@@ -41,7 +41,8 @@ pub fn MMA(a: []f16, b: []f16, a_layout: MatrixLayout, b_layout: MatrixLayout, s
 test "single block ones multiply" {
     const alloc = std.testing.allocator;
     var mat = [_]f16{1} ** 256;
-    const e = try MMA(&mat, &mat, 16, alloc);
+    const layout = MatrixLayout.max_prec(1);
+    const e = try MMA(&mat, &mat, layout, layout, 16, alloc);
     defer alloc.free(e);
     for (e) |r| expect(r == 16.0);
 }
@@ -49,7 +50,8 @@ test "single block ones multiply" {
 test "4 block ones multiply" {
     const alloc = std.testing.allocator;
     var mat = [_]f16{1} ** (256 * 4);
-    const e = try MMA(&mat, &mat, 32, alloc);
+    const layout = MatrixLayout.max_prec(2);
+    const e = try MMA(&mat, &mat, layout, layout, 32, alloc);
     defer alloc.free(e);
     for (e) |r| expect(r == 32.0);
 }
@@ -57,7 +59,8 @@ test "4 block ones multiply" {
 test "9 block ones multiply" {
     const alloc = std.testing.allocator;
     var mat = [_]f16{1} ** (256 * 9);
-    const e = try MMA(&mat, &mat, 48, alloc);
+    const layout = MatrixLayout.max_prec(3);
+    const e = try MMA(&mat, &mat, layout, layout, 48, alloc);
     defer alloc.free(e);
     for (e) |r| expect(r == 48.0);
 }
@@ -74,7 +77,8 @@ test "actual multiplication" {
     b[8] = 6;
     b[128] = 7;
     b[136] = 8;
-    const e = try MMA(&a, &b, 16, alloc);
+    const layout = MatrixLayout.max_prec(1);
+    const e = try MMA(&a, &b, layout, layout, 16, alloc);
     defer alloc.free(e);
     expect(e[0] == 26);
     expect(e[8] == 38);
@@ -94,7 +98,29 @@ test "actual multiplication 2" {
     b[16] = 6;
     b[512] = 7;
     b[528] = 8;
-    const e = try MMA(&a, &b, 32, alloc);
+    const layout = MatrixLayout.max_prec(2);
+    const e = try MMA(&a, &b, layout, layout, 32, alloc);
+    defer alloc.free(e);
+    expect(e[0] == 26);
+    expect(e[16] == 38);
+    expect(e[512] == 30);
+    expect(e[528] == 44);
+}
+
+test "two precisions" {
+    const alloc = std.testing.allocator;
+    var a = [_]f16{0} ** (256 * 4);
+    a[0] = 1;
+    a[16] = 2;
+    a[512] = 3;
+    a[528] = 4;
+    var b = [_]f16{0} ** (256 * 4);
+    b[0] = 5;
+    b[16] = 6;
+    b[512] = 7;
+    b[528] = 8;
+    const layout = MatrixLayout.symetric(.{ 1, 1 });
+    const e = try MMA(&a, &b, layout, layout, 32, alloc);
     defer alloc.free(e);
     expect(e[0] == 26);
     expect(e[16] == 38);

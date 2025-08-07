@@ -13,6 +13,16 @@ pub const MatrixLayout = struct {
     x_layout: [n_precisions]usize,
     y_layout: [n_precisions]usize,
 
+    pub fn max_prec(dim: usize) MatrixLayout {
+        const layout = [0]usize{0} ** n_precisions;
+        layout[0] = dim;
+        return MatrixLayout.symetric(layout);
+    }
+
+    pub fn symetric(layout: [n_precisions]usize) MatrixLayout {
+        return MatrixLayout{ .x_layout = layout, .y_layout = layout };
+    }
+
     pub fn get_precision(self: MatrixLayout, x: usize, y: usize) Precision {
         var x_max = 0;
         var x_prec = 0;
