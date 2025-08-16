@@ -1,6 +1,6 @@
 const std = @import("std");
 const Kernel = @import("wmma").Kernel;
-const MatrixLayout = @import("matrix_layout.zig").MatrixLayout;
+const MatrixLayout = @import("utils").MatrixLayout;
 const testing = std.testing;
 const assert = std.debug.assert;
 const expect = std.testing.expect;
@@ -44,7 +44,7 @@ test "single block ones multiply" {
     const layout = MatrixLayout.max_prec(1);
     const e = try MMA(&mat, &mat, layout, layout, 16, alloc);
     defer alloc.free(e);
-    for (e) |r| expect(r == 16.0);
+    for (e) |r| try expect(r == 16.0);
 }
 
 test "4 block ones multiply" {
@@ -53,7 +53,7 @@ test "4 block ones multiply" {
     const layout = MatrixLayout.max_prec(2);
     const e = try MMA(&mat, &mat, layout, layout, 32, alloc);
     defer alloc.free(e);
-    for (e) |r| expect(r == 32.0);
+    for (e) |r| try expect(r == 32.0);
 }
 
 test "9 block ones multiply" {
@@ -62,7 +62,7 @@ test "9 block ones multiply" {
     const layout = MatrixLayout.max_prec(3);
     const e = try MMA(&mat, &mat, layout, layout, 48, alloc);
     defer alloc.free(e);
-    for (e) |r| expect(r == 48.0);
+    for (e) |r| try expect(r == 48.0);
 }
 
 test "actual multiplication" {
@@ -80,10 +80,10 @@ test "actual multiplication" {
     const layout = MatrixLayout.max_prec(1);
     const e = try MMA(&a, &b, layout, layout, 16, alloc);
     defer alloc.free(e);
-    expect(e[0] == 26);
-    expect(e[8] == 38);
-    expect(e[128] == 30);
-    expect(e[136] == 44);
+    try expect(e[0] == 26);
+    try expect(e[8] == 38);
+    try expect(e[128] == 30);
+    try expect(e[136] == 44);
 }
 
 test "actual multiplication 2" {
@@ -101,10 +101,10 @@ test "actual multiplication 2" {
     const layout = MatrixLayout.max_prec(2);
     const e = try MMA(&a, &b, layout, layout, 32, alloc);
     defer alloc.free(e);
-    expect(e[0] == 26);
-    expect(e[16] == 38);
-    expect(e[512] == 30);
-    expect(e[528] == 44);
+    try expect(e[0] == 26);
+    try expect(e[16] == 38);
+    try expect(e[512] == 30);
+    try expect(e[528] == 44);
 }
 
 test "two precisions" {
@@ -119,11 +119,11 @@ test "two precisions" {
     b[16] = 6;
     b[512] = 7;
     b[528] = 8;
-    const layout = MatrixLayout.symetric(.{ 1, 1 });
+    const layout = MatrixLayout.max_prec(1);
     const e = try MMA(&a, &b, layout, layout, 32, alloc);
     defer alloc.free(e);
-    expect(e[0] == 26);
-    expect(e[16] == 38);
-    expect(e[512] == 30);
-    expect(e[528] == 44);
+    try expect(e[0] == 26);
+    try expect(e[16] == 38);
+    try expect(e[512] == 30);
+    try expect(e[528] == 44);
 }

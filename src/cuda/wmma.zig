@@ -1,18 +1,19 @@
 const std = @import("std");
 const testing = std.testing;
 const Cuda = @import("cudaz");
-const Precision = @import("../zig/matrix_layout.zig").Precision;
+const Precision = @import("utils").Precision;
 const CuDevice = Cuda.Device;
 const CuCompile = Cuda.Compile;
 const CuLaunchConfig = Cuda.LaunchConfig;
 const Function = Cuda.Function;
 const Module = Cuda.Module;
+const cudaMalloc = @cImport("cuda_runtime.h").cudaMalloc;
 const prec_num: usize = @typeInfo(Precision).@"enum".fields.len;
 
 pub const Kernel = struct {
     ptx: [:0]const u8,
     module: Module,
-    func: Function[prec_num],
+    func: [prec_num]Function,
     device: CuDevice,
 
     pub fn init(alloc: std.mem.Allocator) !Kernel {
@@ -21,9 +22,9 @@ pub const Kernel = struct {
         const ptx = try read_source("zig-out/lib/wmma", alloc);
 
         const module = try CuDevice.loadPtxText(ptx);
-        const function = Function[1]{undefined} ** prec_num;
+        var function = [_]Function{undefined} ** prec_num;
         inline for (@typeInfo(Precision).@"enum".fields, 0..) |name, i|
-            function[i] = try module.getFunc("wmma" + name.name);
+            function[i] = try module.getFunc("wmma" ++ name.name);
         return .{ .func = function, .module = module, .ptx = ptx, .device = device };
     }
 
@@ -31,11 +32,17 @@ pub const Kernel = struct {
         const cu_slice_a = try self.device.htodCopy(f16, a);
         const cu_slice_b = try self.device.htodCopy(f16, b);
         const dest_cu_slice = try self.device.htodCopy(f16, c);
+        const b_a = try self.device.htodCopy(u8, &([_]u8{0} ** 256));
+        const b_b = try self.device.htodCopy(u8, &([_]u8{0} ** 256));
+        const b_c = try self.device.htodCopy(i32, &([_]i32{0} ** 256));
+        defer b_a.free();
+        defer b_b.free();
+        defer b_c.free();
         defer cu_slice_a.free();
         defer cu_slice_b.free();
         defer dest_cu_slice.free();
 
-        try self.func[@intFromEnum(precision)].run(.{ &cu_slice_a.device_ptr, &cu_slice_b.device_ptr, &dest_cu_slice.device_ptr, &stride }, CuLaunchConfig{ .block_dim = .{ 1024, 1, 1 }, .grid_dim = .{ 1, 1, 1 }, .shared_mem_bytes = 0 });
+        try self.func[@intFromEnum(precision)].run(.{ &cu_slice_a.device_ptr, &cu_slice_b.device_ptr, &dest_cu_slice.device_ptr, b_a, b_b, b_c, &stride }, CuLaunchConfig{ .block_dim = .{ 1024, 1, 1 }, .grid_dim = .{ 1, 1, 1 }, .shared_mem_bytes = 0 });
         const result = try CuDevice.syncReclaim(f16, allocator, dest_cu_slice);
 
         return result;

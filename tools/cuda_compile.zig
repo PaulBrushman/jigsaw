@@ -19,7 +19,7 @@ pub fn main() !void {
     const device = try CuDevice.default();
     defer device.deinit();
     // std.debug.print("Cuda device is setup\n", .{});
-    const env_vars = [_][]const u8{ "CUDA_PATH", "NIX_LDFLAGS", "EXTRA_LDFLAGS", "EXTRA_CCFLAGS", "LD_LIBRARY_PATH" };
+    const env_vars = [_][]const u8{ "CUDA_PATH", "NIX_LDFLAGS", "EXTRA_LDFLAGS", "EXTRA_CCFLAGS", "LD_LIBRARY_PATH", "CUDA_VISIBLE_DEVICES" }; // "LDFLAGS", "STDDEV_PATH", "CUDA_DISABLE_PTX_JIT"
     var env_values: [env_vars.len + 1][]const u8 = .{undefined} ** (env_vars.len + 1);
     inline for (env_vars, 0..) |_var, i|
         env_values[i] = try std.process.getEnvVarOwned(allocator, _var);
@@ -33,7 +33,7 @@ pub fn main() !void {
     const wmma_kernel = try read_source(source, allocator);
     defer allocator.free(wmma_kernel);
 
-    const ptx = try CuCompile.cudaText(wmma_kernel, .{ .include_paths = &env_values, .arch = &d, .macro = &m }, allocator);
+    const ptx = try CuCompile.cudaText(wmma_kernel, .{ .include_paths = &env_values, .arch = &d, .macro = &m, .rdc = true }, allocator);
     defer allocator.free(ptx);
 
     const target_file = try std.fs.cwd().createFile(target, .{});

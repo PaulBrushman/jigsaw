@@ -9,6 +9,8 @@ pub fn build(b: *std.Build) void {
     nvrtc.linkSystemLibrary("cuda");
     nvrtc.linkSystemLibrary("nvrtc");
 
+    const utils = b.createModule(.{ .root_source_file = b.path("utils/utils.zig") });
+
     const compile_cuda = b.addRunArtifact(nvrtc);
     compile_cuda.addArg("src/cuda/wmma.cu");
     compile_cuda.addArg("zig-out/lib/wmma");
@@ -16,6 +18,7 @@ pub fn build(b: *std.Build) void {
 
     const wmma = b.createModule(.{ .root_source_file = b.path("src/cuda/wmma.zig") });
     wmma.addImport("cudaz", cudaz_module);
+    wmma.addImport("utils", utils);
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -25,6 +28,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     lib_mod.addImport("wmma", wmma);
+    lib_mod.addImport("utils", utils);
 
     const lib = b.addLibrary(.{
         .linkage = .static,
