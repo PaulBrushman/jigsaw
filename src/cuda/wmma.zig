@@ -7,7 +7,7 @@ const CuCompile = Cuda.Compile;
 const CuLaunchConfig = Cuda.LaunchConfig;
 const Function = Cuda.Function;
 const Module = Cuda.Module;
-const cudaMalloc = @cImport("cuda_runtime.h").cudaMalloc;
+// const cudaMalloc = @cImport("cuda_runtime.h").cudaMalloc;
 const prec_num: usize = @typeInfo(Precision).@"enum".fields.len;
 
 pub const Kernel = struct {

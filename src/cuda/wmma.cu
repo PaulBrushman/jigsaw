@@ -6,6 +6,8 @@
 // #include <driver_types.h>
 // #include <helper_cuda.h>
 
+// extern "C" __host__ int main() {return 0;}
+
 using namespace nvcuda;
 extern "C" __global__ void wmma_half(half *a, half *b, half *c, unsigned char *b_a, unsigned char *b_b, int *b_c, const size_t stride) {
    wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::col_major> a_frag;
