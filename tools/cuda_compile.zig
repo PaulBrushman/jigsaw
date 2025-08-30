@@ -27,7 +27,7 @@ pub fn main() !void {
         try std.mem.concat(allocator, u8, &.{ env_values[0], "/include" });
     defer inline for (env_values) |value| allocator.free(value);
 
-    var d = [_][]const u8{"compute_86"};
+    var d = [_][]const u8{"compute_75"};
     var m = [_][]const u8{"__x86_64__"};
 
     const wmma_kernel = try read_source(source, allocator);

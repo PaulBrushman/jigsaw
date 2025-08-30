@@ -7,6 +7,7 @@ const CuCompile = Cuda.Compile;
 const CuLaunchConfig = Cuda.LaunchConfig;
 const Function = Cuda.Function;
 const Module = Cuda.Module;
+// const print = std.debug.print;
 // const cudaMalloc = @cImport("cuda_runtime.h").cudaMalloc;
 const prec_num: usize = @typeInfo(Precision).@"enum".fields.len;
 
@@ -24,7 +25,7 @@ pub const Kernel = struct {
         const module = try CuDevice.loadPtxText(ptx);
         var function = [_]Function{undefined} ** prec_num;
         inline for (@typeInfo(Precision).@"enum".fields, 0..) |name, i|
-            function[i] = try module.getFunc("wmma" ++ name.name);
+            function[i] = try module.getFunc("wmma_" ++ name.name);
         return .{ .func = function, .module = module, .ptx = ptx, .device = device };
     }
 
@@ -42,7 +43,7 @@ pub const Kernel = struct {
         defer cu_slice_b.free();
         defer dest_cu_slice.free();
 
-        try self.func[@intFromEnum(precision)].run(.{ &cu_slice_a.device_ptr, &cu_slice_b.device_ptr, &dest_cu_slice.device_ptr, b_a, b_b, b_c, &stride }, CuLaunchConfig{ .block_dim = .{ 1024, 1, 1 }, .grid_dim = .{ 1, 1, 1 }, .shared_mem_bytes = 0 });
+        try self.func[@intFromEnum(precision)].run(.{ &cu_slice_a.device_ptr, &cu_slice_b.device_ptr, &dest_cu_slice.device_ptr, &b_a.device_ptr, &b_b.device_ptr, &b_c.device_ptr, &stride }, CuLaunchConfig{ .block_dim = .{ 1024, 1, 1 }, .grid_dim = .{ 1, 1, 1 }, .shared_mem_bytes = 0 });
         const result = try CuDevice.syncReclaim(f16, allocator, dest_cu_slice);
 
         return result;

@@ -2,7 +2,7 @@
 // #include <stdio.h>
 // #include <cuda_runtime.h>
 #include <mma.h>
-#include <cuda_fp16.h>
+// #include <cuda_fp16.h>
 // #include <driver_types.h>
 // #include <helper_cuda.h>
 
@@ -26,21 +26,21 @@ extern "C" __global__ void wmma_half(half *a, half *b, half *c, unsigned char *b
    wmma::store_matrix_sync(c, dest_frag, stride, wmma::mem_col_major);
 }
 
-extern __global__ void dummy_quant(half *a, unsigned char *b){
-  int x = threadIdx.x + blockIdx.x * blockDim.x;
-  // b[x] = 1;
-  b[x] = __half2uchar_rz(a[x]);
-}
+// __device__ void dummy_quant(half *a, unsigned char *b){
+//   int x = threadIdx.x + blockIdx.x * blockDim.x;
+//   // b[x] = 1;
+//   b[x] = __half2uchar_rz(a[x]);
+// }
 
-extern __global__ void dummy_dequant(int *a, half *b){
-  int x = threadIdx.x + blockIdx.x * blockDim.x;
-  // b[x] = 1.0;
-  b[x] = __int2half_rz(a[x]);
-  //b[x] = __uchar2float(a[x]);
-}
+// __device__ void dummy_dequant(int *a, half *b){
+//   int x = threadIdx.x + blockIdx.x * blockDim.x;
+//   // b[x] = 1.0;
+//   b[x] = __int2half_rz(a[x]);
+//   //b[x] = __uchar2float(a[x]);
+// }
 
-const int byteMatrixSize = 256;
-const int blockSize = 32; //read developer.nvidia.com/blog/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/
+// const int byteMatrixSize = 256;
+// const int blockSize = 32; //read developer.nvidia.com/blog/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/
 
 extern "C" __global__ void wmma_byte(half *a, half *b, half *c, unsigned char *b_a, unsigned char *b_b, int *b_c, const size_t stride) {
   wmma::fragment<wmma::matrix_a, 16, 16, 16, unsigned char, wmma::col_major> a_frag;
@@ -53,8 +53,12 @@ extern "C" __global__ void wmma_byte(half *a, half *b, half *c, unsigned char *b
    // checkCudaErrors(cudaMalloc((void **)(&b_b), byteMatrixSize));
    // checkCudaErrors(cudaMalloc((void **)(&b_c), byteMatrixSize));
 
-   dummy_quant<<<byteMatrixSize/blockSize, blockSize>>>(a,b_a);
-   dummy_quant<<<byteMatrixSize/blockSize, blockSize>>>(b,b_b);
+   // dummy_quant<<<byteMatrixSize/blockSize, blockSize>>>(a,b_a);
+   // dummy_quant<<<byteMatrixSize/blockSize, blockSize>>>(b,b_b);
+   for (int i = 0;i<256;i++) {
+      b_a[i] = __half2uchar_rz(a[i]);
+      b_b[i] = __half2uchar_rz(b[i]);
+  };
 
    wmma::fill_fragment(dest_frag, 0);
    wmma::load_matrix_sync(a_frag, b_a, stride);
@@ -63,6 +67,9 @@ extern "C" __global__ void wmma_byte(half *a, half *b, half *c, unsigned char *b
    wmma::mma_sync(dest_frag, a_frag, b_frag, dest_frag);
 
    wmma::store_matrix_sync(b_c, dest_frag, stride, wmma::mem_col_major);
-  
-   dummy_dequant<<<byteMatrixSize/blockSize, blockSize>>>(b_c, c);
+
+  for (int i = 0; i < 256; i++){
+       c[i] = __int2half_rz(a[i]);
+  };
+   // dummy_dequant<<<byteMatrixSize/blockSize, blockSize>>>(b_c, c);
 }
