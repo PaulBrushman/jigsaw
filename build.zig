@@ -12,9 +12,9 @@ pub fn build(b: *std.Build) void {
     const utils = b.createModule(.{ .root_source_file = b.path("utils/utils.zig") });
 
     const compile_cuda = b.addRunArtifact(nvrtc);
-    compile_cuda.addArg("src/cuda/wmma.cu");
-    compile_cuda.addArg("zig-out/lib/wmma");
-    b.getInstallStep().dependOn(&compile_cuda.step);
+    compile_cuda.addFileArg(b.path("src/cuda/wmma.cu"));
+    const output = compile_cuda.addOutputFileArg("lib/wmma");
+    b.getInstallStep().dependOn(&b.addInstallFile(output, "lib/wmma").step);
 
     const wmma = b.createModule(.{ .root_source_file = b.path("src/cuda/wmma.zig") });
     wmma.addImport("cudaz", cudaz_module);
